@@ -3,6 +3,7 @@
 # 03_throughput_test.sh
 # スループット評価 - fio シーケンシャル読み書きテスト
 # 測試項目：1GB～10GB 檔案的循序讀寫效能
+# 包含 CPU/Memory 使用率監控
 #===============================================================================
 
 set -e
@@ -10,6 +11,22 @@ set -e
 # 設定
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RESULT_DIR="${SCRIPT_DIR}/results/throughput"
+MONITOR_SCRIPT="${SCRIPT_DIR}/monitor_resources.sh"
+
+# 啟動資源監控
+start_resource_monitor() {
+    local test_name="$1"
+    if [[ -x "$MONITOR_SCRIPT" ]]; then
+        "$MONITOR_SCRIPT" start "throughput_${test_name}" &>/dev/null
+    fi
+}
+
+# 停止資源監控
+stop_resource_monitor() {
+    if [[ -x "$MONITOR_SCRIPT" ]]; then
+        "$MONITOR_SCRIPT" stop &>/dev/null || true
+    fi
+}
 FIO_RUNTIME=60        # 每個測試運行時間（秒）
 FIO_RAMP=5            # 預熱時間
 FILE_SIZES=("1G" "5G" "10G")
@@ -91,6 +108,9 @@ test_mdadm() {
     
     log_info "===== mdadm $raid_type スループットテスト ====="
     
+    # 啟動資源監控
+    start_resource_monitor "mdadm_${raid_type}"
+    
     for file_size in "${FILE_SIZES[@]}"; do
         for block_size in "${BLOCK_SIZES[@]}"; do
             # 寫入測試
@@ -100,6 +120,9 @@ test_mdadm() {
             run_fio_throughput "mdadm_${raid_type}" "$test_dir" "$file_size" "$block_size" "read"
         done
     done
+    
+    # 停止資源監控
+    stop_resource_monitor
 }
 
 #-------------------------------------------------------------------------------
@@ -116,6 +139,9 @@ test_zfs() {
     
     log_info "===== ZFS $raid_type スループットテスト ====="
     
+    # 啟動資源監控
+    start_resource_monitor "zfs_${raid_type}"
+    
     for file_size in "${FILE_SIZES[@]}"; do
         for block_size in "${BLOCK_SIZES[@]}"; do
             # 寫入測試
@@ -125,6 +151,9 @@ test_zfs() {
             run_fio_throughput "zfs_${raid_type}" "$test_dir" "$file_size" "$block_size" "read"
         done
     done
+    
+    # 停止資源監控
+    stop_resource_monitor
 }
 
 #-------------------------------------------------------------------------------

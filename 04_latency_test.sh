@@ -2,12 +2,30 @@
 #===============================================================================
 # 04_latency_test.sh
 # レイテンシ評価 - fio ランダム 4KB 読み書き p99/p999 測定
+# 包含 CPU/Memory 使用率監控
 #===============================================================================
 
 set -e
 
 # 設定
-RESULT_DIR="/home/claude/mdadm_zfs_benchmark/results/latency"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+RESULT_DIR="${SCRIPT_DIR}/results/latency"
+MONITOR_SCRIPT="${SCRIPT_DIR}/monitor_resources.sh"
+
+# 啟動資源監控
+start_resource_monitor() {
+    local test_name="$1"
+    if [[ -x "$MONITOR_SCRIPT" ]]; then
+        "$MONITOR_SCRIPT" start "latency_${test_name}" &>/dev/null
+    fi
+}
+
+# 停止資源監控
+stop_resource_monitor() {
+    if [[ -x "$MONITOR_SCRIPT" ]]; then
+        "$MONITOR_SCRIPT" stop &>/dev/null || true
+    fi
+}
 FIO_RUNTIME=120       # 延遲測試需要較長時間取得準確數據
 FIO_RAMP=10
 BLOCK_SIZE="4k"
@@ -101,11 +119,17 @@ test_mdadm_latency() {
     
     log_info "===== mdadm $raid_type レイテンシテスト ====="
     
+    # 啟動資源監控
+    start_resource_monitor "mdadm_${raid_type}"
+    
     for iodepth in "${IODEPTH_LIST[@]}"; do
         run_latency_test "mdadm_${raid_type}" "$test_dir" "randread" "$iodepth"
         run_latency_test "mdadm_${raid_type}" "$test_dir" "randwrite" "$iodepth"
         run_latency_test "mdadm_${raid_type}" "$test_dir" "randrw" "$iodepth"
     done
+    
+    # 停止資源監控
+    stop_resource_monitor
 }
 
 #-------------------------------------------------------------------------------
@@ -122,11 +146,17 @@ test_zfs_latency() {
     
     log_info "===== ZFS $raid_type レイテンシテスト ====="
     
+    # 啟動資源監控
+    start_resource_monitor "zfs_${raid_type}"
+    
     for iodepth in "${IODEPTH_LIST[@]}"; do
         run_latency_test "zfs_${raid_type}" "$test_dir" "randread" "$iodepth"
         run_latency_test "zfs_${raid_type}" "$test_dir" "randwrite" "$iodepth"
         run_latency_test "zfs_${raid_type}" "$test_dir" "randrw" "$iodepth"
     done
+    
+    # 停止資源監控
+    stop_resource_monitor
 }
 
 #-------------------------------------------------------------------------------
