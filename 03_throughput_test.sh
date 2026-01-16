@@ -11,20 +11,29 @@ set -e
 # 設定
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RESULT_DIR="${SCRIPT_DIR}/results/throughput"
+RESOURCE_DIR="${SCRIPT_DIR}/results/resources"
 MONITOR_SCRIPT="${SCRIPT_DIR}/monitor_resources.sh"
+
+# 建立目錄
+mkdir -p "$RESULT_DIR"
+mkdir -p "$RESOURCE_DIR"
 
 # 啟動資源監控
 start_resource_monitor() {
     local test_name="$1"
     if [[ -x "$MONITOR_SCRIPT" ]]; then
-        "$MONITOR_SCRIPT" start "throughput_${test_name}" &>/dev/null
+        log_info "啟動資源監控: $test_name"
+        "$MONITOR_SCRIPT" start "throughput_${test_name}"
+    else
+        log_info "警告: 監控腳本不存在或無執行權限: $MONITOR_SCRIPT"
     fi
 }
 
 # 停止資源監控
 stop_resource_monitor() {
     if [[ -x "$MONITOR_SCRIPT" ]]; then
-        "$MONITOR_SCRIPT" stop &>/dev/null || true
+        log_info "停止資源監控"
+        "$MONITOR_SCRIPT" stop || true
     fi
 }
 FIO_RUNTIME=60        # 每個測試運行時間（秒）
@@ -41,8 +50,6 @@ NC='\033[0m'
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_test() { echo -e "${YELLOW}[TEST]${NC} $1"; }
-
-mkdir -p "$RESULT_DIR"
 
 #-------------------------------------------------------------------------------
 # 通用 FIO 測試函數
