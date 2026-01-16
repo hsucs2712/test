@@ -14,9 +14,11 @@ matplotlib.use('Agg')  # 無 GUI 環境
 import numpy as np
 from pathlib import Path
 
-# 設定
-RESULT_BASE = "/home/claude/mdadm_zfs_benchmark/results"
-OUTPUT_DIR = "/home/claude/mdadm_zfs_benchmark/analysis"
+# 設定 - 使用相對路徑
+import sys
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+RESULT_BASE = os.path.join(SCRIPT_DIR, "results")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "analysis")
 
 # 日文字體（如果沒有則用英文）
 plt.rcParams['font.family'] = ['DejaVu Sans', 'IPAGothic', 'sans-serif']

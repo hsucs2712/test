@@ -8,7 +8,8 @@
 set -e
 
 # 設定
-RESULT_DIR="/home/claude/mdadm_zfs_benchmark/results/throughput"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+RESULT_DIR="${SCRIPT_DIR}/results/throughput"
 FIO_RUNTIME=60        # 每個測試運行時間（秒）
 FIO_RAMP=5            # 預熱時間
 FILE_SIZES=("1G" "5G" "10G")

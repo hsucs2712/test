@@ -7,7 +7,7 @@
 set -e
 
 # 設定變數 - 根據實際環境修改
-DISKS=("/dev/sdb" "/dev/sdc" "/dev/sdd" "/dev/sde")  # 使用的硬碟
+DISKS=("/dev/nvme1n1" "/dev/nvme3n1" "/dev/nvme4n1" "/dev/nvme5n1")  # NVMe 硬碟
 TEST_BASE="/mnt/mdadm_test"
 
 # 顏色輸出
